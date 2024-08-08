@@ -1,0 +1,198 @@
+version: '2'
+services:
+  php:
+    container_name: kafka_php
+    image: kafka-php
+    build: ./docker/php
+    restart: always
+    volumes:
+        - ./:/usr/share/nginx/www
+    working_dir: /usr/share/nginx/www
+
+  nginx:
+    container_name: kafka_nginx
+    image: kafka-nginx
+    build: ./docker/nginx
+    restart: always
+    volumes_from:
+        - php
+    ports:
+      - 81:80
+
+  zookeeper:
+    container_name: kafka_zookeeper
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_SERVER_ID: 1
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_SYNC_LIMIT: 2
+      ZOOKEEPER_SERVERS: zookeeper:2888:3888;zookeeper_2:2888:3888;zookeeper_3:2888:3888
+
+  zookeeper_2:
+    container_name: kafka_zookeeper_2
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_SERVER_ID: 2
+      ZOOKEEPER_CLIENT_PORT: 22181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_SYNC_LIMIT: 2
+      ZOOKEEPER_SERVERS: zookeeper:2888:3888;zookeeper_2:2888:3888;zookeeper_3:2888:3888
+
+  zookeeper_3:
+    container_name: kafka_zookeeper_3
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_SERVER_ID: 3
+      ZOOKEEPER_CLIENT_PORT: 32181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_SYNC_LIMIT: 2
+      ZOOKEEPER_SERVERS: zookeeper:2888:3888;zookeeper_2:2888:3888;zookeeper_3:2888:3888
+
+  kafka:
+    container_name: kafka_kafka
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper
+      - zookeeper_2
+      - zookeeper_3
+    ports:
+      - 9092:9092
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181,zookeeper_2:22181,zookeeper_3:32181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+
+  kafka_2:
+    container_name: kafka_kafka_2
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper
+      - zookeeper_2
+      - zookeeper_3
+    ports:
+      - 29092:9092
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181,zookeeper_2:22181,zookeeper_3:32181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka_2:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+
+  kafka_3:
+    container_name: kafka_kafka_3
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper
+      - zookeeper_2
+      - zookeeper_3
+    ports:
+      - 39092:9092
+    environment:
+      KAFKA_BROKER_ID: 3
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181,zookeeper_2:22181,zookeeper_3:32181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka_3:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+
+  init-kafka:
+    image: confluentinc/cp-kafka:7.7.0
+    depends_on:
+      - kafka
+    entrypoint: [ '/bin/sh', '-c' ]
+    command: |
+      "
+      # blocks until kafka is reachable
+      kafka-topics --bootstrap-server kafka:9092 --list
+      
+      echo -e 'Creating kafka topics'
+      kafka-topics --bootstrap-server kafka:9092 --create --topic AtualizaDadosPDV --replication-factor 2 --partitions 3
+      kafka-topics --bootstrap-server kafka:9092 --create --topic GravaBinarioMovimento --replication-factor 2 --partitions 3
+      kafka-topics --bootstrap-server kafka:9092 --create --topic subirXMLNota --replication-factor 2 --partitions 3
+      
+      echo -e 'Successfully created the following topics:'
+      kafka-topics --bootstrap-server kafka:9092 --list
+      "
+
+  consumer-AtualizaDadosPDV:
+    container_name: kafka_consumer-AtualizaDadosPDV
+    image: kafka-php
+    restart: always
+    working_dir: /usr/share/nginx/www
+    entrypoint: ['php', '/usr/share/nginx/www/public/consumerAtualizaDadosPDV.php']
+    volumes:
+      - ./:/usr/share/nginx/www
+
+  consumer-AtualizaDadosPDV_2:
+    container_name: kafka_consumer-AtualizaDadosPDV_2
+    image: kafka-php
+    restart: always
+    working_dir: /usr/share/nginx/www
+    entrypoint: ['php', '/usr/share/nginx/www/public/consumerAtualizaDadosPDV_2.php']
+    volumes:
+      - ./:/usr/share/nginx/www
+
+  consumer-AtualizaDadosPDV_3:
+    container_name: kafka_consumer-AtualizaDadosPDV_3
+    image: kafka-php
+    restart: always
+    working_dir: /usr/share/nginx/www
+    entrypoint: ['php', '/usr/share/nginx/www/public/consumerAtualizaDadosPDV_3.php']
+    volumes:
+      - ./:/usr/share/nginx/www
+
+  consumer-GravaBinarioMovimento:
+    container_name: kafka_consumer-GravaBinarioMovimento
+    image: kafka-php
+    restart: always
+    working_dir: /usr/share/nginx/www
+    entrypoint: ['php', '/usr/share/nginx/www/public/consumerGravaBinarioMovimento.php']
+    volumes:
+      - ./:/usr/share/nginx/www
+
+  consumer-GravaBinarioMovimento_2:
+    container_name: kafka_consumer-GravaBinarioMovimento_2
+    image: kafka-php
+    restart: always
+    working_dir: /usr/share/nginx/www
+    entrypoint: ['php', '/usr/share/nginx/www/public/consumerGravaBinarioMovimento_2.php']
+    volumes:
+      - ./:/usr/share/nginx/www
+
+  consumer-GravaBinarioMovimento_3:
+    container_name: kafka_consumer-GravaBinarioMovimento_3
+    image: kafka-php
+    restart: always
+    working_dir: /usr/share/nginx/www
+    entrypoint: ['php', '/usr/share/nginx/www/public/consumerGravaBinarioMovimento_3.php']
+    volumes:
+      - ./:/usr/share/nginx/www
+
+  consumer-subirXMLNota:
+    container_name: kafka_consumer-subirXMLNota
+    image: kafka-php
+    restart: always
+    working_dir: /usr/share/nginx/www
+    entrypoint: ['php', '/usr/share/nginx/www/public/consumerSubirXMLNota.php']
+    volumes:
+      - ./:/usr/share/nginx/www
+
+  consumer-subirXMLNota_2:
+    container_name: kafka_consumer-subirXMLNota_2
+    image: kafka-php
+    restart: always
+    working_dir: /usr/share/nginx/www
+    entrypoint: ['php', '/usr/share/nginx/www/public/consumerSubirXMLNota_2.php']
+    volumes:
+      - ./:/usr/share/nginx/www
+
+  consumer-subirXMLNota_3:
+    container_name: kafka_consumer-subirXMLNota_3
+    image: kafka-php
+    restart: always
+    working_dir: /usr/share/nginx/www
+    entrypoint: ['php', '/usr/share/nginx/www/public/consumerSubirXMLNota_3.php']
+    volumes:
+      - ./:/usr/share/nginx/www
