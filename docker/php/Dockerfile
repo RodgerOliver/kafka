@@ -21,6 +21,8 @@ RUN apt-get install librdkafka-dev -y
 RUN pecl install rdkafka \
     && docker-php-ext-enable rdkafka
 
+COPY php.ini.example /usr/local/etc/php/php.ini
+
 # Set working directory and user
 WORKDIR /usr/share/nginx/www
 

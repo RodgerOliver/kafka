@@ -22,6 +22,7 @@ services:
   zookeeper:
     container_name: kafka_zookeeper
     image: confluentinc/cp-zookeeper:latest
+    restart: always
     environment:
       ZOOKEEPER_SERVER_ID: 1
       ZOOKEEPER_CLIENT_PORT: 2181
@@ -33,6 +34,7 @@ services:
   zookeeper_2:
     container_name: kafka_zookeeper_2
     image: confluentinc/cp-zookeeper:latest
+    restart: always
     environment:
       ZOOKEEPER_SERVER_ID: 2
       ZOOKEEPER_CLIENT_PORT: 22181
@@ -44,6 +46,7 @@ services:
   zookeeper_3:
     container_name: kafka_zookeeper_3
     image: confluentinc/cp-zookeeper:latest
+    restart: always
     environment:
       ZOOKEEPER_SERVER_ID: 3
       ZOOKEEPER_CLIENT_PORT: 32181
@@ -55,6 +58,7 @@ services:
   kafka:
     container_name: kafka_kafka
     image: confluentinc/cp-kafka:latest
+    restart: always
     depends_on:
       - zookeeper
       - zookeeper_2
@@ -70,6 +74,7 @@ services:
   kafka_2:
     container_name: kafka_kafka_2
     image: confluentinc/cp-kafka:latest
+    restart: always
     depends_on:
       - zookeeper
       - zookeeper_2
@@ -85,6 +90,7 @@ services:
   kafka_3:
     container_name: kafka_kafka_3
     image: confluentinc/cp-kafka:latest
+    restart: always
     depends_on:
       - zookeeper
       - zookeeper_2
@@ -106,12 +112,13 @@ services:
       "
       # blocks until kafka is reachable
       kafka-topics --bootstrap-server kafka:9092 --list
-      
+
       echo -e 'Creating kafka topics'
-      kafka-topics --bootstrap-server kafka:9092 --create --topic AtualizaDadosPDV --replication-factor 2 --partitions 3
-      kafka-topics --bootstrap-server kafka:9092 --create --topic GravaBinarioMovimento --replication-factor 2 --partitions 3
-      kafka-topics --bootstrap-server kafka:9092 --create --topic subirXMLNota --replication-factor 2 --partitions 3
-      
+      kafka-topics --bootstrap-server kafka:9092 --create --topic AtualizaDadosPDV --replication-factor 3 --partitions 3
+      kafka-topics --bootstrap-server kafka:9092 --create --topic GravaBinarioMovimento --replication-factor 3 --partitions 3
+      kafka-topics --bootstrap-server kafka:9092 --create --topic subirXMLNota --replication-factor 3 --partitions 3
+      kafka-topics --bootstrap-server kafka:9092 --create --topic KafkaErrors --replication-factor 3 --partitions 1
+
       echo -e 'Successfully created the following topics:'
       kafka-topics --bootstrap-server kafka:9092 --list
       "
@@ -194,5 +201,14 @@ services:
     restart: always
     working_dir: /usr/share/nginx/www
     entrypoint: ['php', '/usr/share/nginx/www/public/consumerSubirXMLNota_3.php']
+    volumes:
+      - ./:/usr/share/nginx/www
+
+  consumer-KafkaErrors:
+    container_name: kafka_consumer-KafkaErrors
+    image: kafka-php
+    restart: always
+    working_dir: /usr/share/nginx/www
+    entrypoint: ['php', '/usr/share/nginx/www/public/consumerKafkaErrors.php']
     volumes:
       - ./:/usr/share/nginx/www

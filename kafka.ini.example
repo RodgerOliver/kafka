@@ -1,2 +1,3 @@
 [KAFKA]
 log=S
+broker_list=kafka:9092,kafka_2:9092,kafka_3:9092

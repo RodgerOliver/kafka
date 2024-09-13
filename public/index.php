@@ -39,7 +39,6 @@ $error = $producer->commitTransaction(10000);
 if (RD_KAFKA_RESP_ERR_NO_ERROR !== $error) {
     //check what kind of error it was e.g. $error->isFatal(), etc. and act accordingly (retry, abort, etc.)
     logMsg('ERROR', var_export($error, true));
-    logMsg('ERROR', var_export($error->isFatal(), true));
 } else {
     logMsg('INFO', 'Message published');
     echo "Message published\n";

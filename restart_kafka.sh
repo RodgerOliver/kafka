@@ -8,5 +8,6 @@ docker-compose rm -f -v init-kafka
 docker-compose up -d php nginx
 docker-compose up -d consumer-AtualizaDadosPDV consumer-AtualizaDadosPDV_2 consumer-AtualizaDadosPDV_3 \
     consumer-GravaBinarioMovimento consumer-GravaBinarioMovimento_2 consumer-GravaBinarioMovimento_3 \
-    consumer-subirXMLNota consumer-subirXMLNota_2 consumer-subirXMLNota_3
+    consumer-subirXMLNota consumer-subirXMLNota_2 consumer-subirXMLNota_3 \
+    consumer-KafkaErrors
 
